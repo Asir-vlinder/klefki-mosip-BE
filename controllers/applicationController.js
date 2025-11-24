@@ -1,0 +1,265 @@
+const Application = require('../models/Application');
+const path = require('path');
+const fs = require('fs');
+
+// @desc    Submit new application
+// @route   POST /api/applications
+// @access  Public
+const submitApplication = async (req, res) => {
+  try {
+    const {
+      nationalId,
+      fullName,
+      dateOfBirth,
+      gender,
+      mobileNumber,
+      email,
+      houseBuilding,
+      streetRoadLane,
+      areaLocality,
+      villageTownCity,
+      district,
+      state,
+      pincode,
+    } = req.body;
+
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Address proof document is required',
+      });
+    }
+
+    // Check for existing application with same nationalId (optional - remove if multiple applications allowed)
+    const existingApplication = await Application.findOne({
+      nationalId,
+      status: { $in: ['Pending', 'Under Review'] },
+    });
+
+    if (existingApplication) {
+      // Remove uploaded file since we're rejecting
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        success: false,
+        message: 'You already have a pending application',
+        applicationId: existingApplication.applicationId,
+      });
+    }
+
+    // Create application
+    const application = new Application({
+      nationalId,
+      fullName,
+      dateOfBirth,
+      gender,
+      mobileNumber,
+      email,
+      address: {
+        houseBuilding,
+        streetRoadLane,
+        areaLocality,
+        villageTownCity,
+        district,
+        state,
+        pincode,
+      },
+      addressProof: {
+        fileName: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path,
+      },
+    });
+
+    await application.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Application submitted successfully',
+      data: {
+        applicationId: application.applicationId,
+        status: application.status,
+        submittedAt: application.submittedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Submit Application Error:', error);
+    
+    // Clean up uploaded file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation Error',
+        errors: messages,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit application',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get application by ID
+// @route   GET /api/applications/:applicationId
+// @access  Public
+const getApplicationById = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    const application = await Application.findOne({ applicationId });
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: application,
+    });
+  } catch (error) {
+    console.error('Get Application Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch application',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get applications by National ID
+// @route   GET /api/applications/user/:nationalId
+// @access  Public
+const getApplicationsByNationalId = async (req, res) => {
+  try {
+    const { nationalId } = req.params;
+
+    const applications = await Application.find({ nationalId })
+      .select('applicationId fullName status submittedAt lastUpdatedAt')
+      .sort({ submittedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: applications.length,
+      data: applications,
+    });
+  } catch (error) {
+    console.error('Get Applications Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch applications',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get all applications (Admin)
+// @route   GET /api/applications
+// @access  Admin
+const getAllApplications = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+
+    const query = {};
+    if (status) {
+      query.status = status;
+    }
+
+    const applications = await Application.find(query)
+      .select('applicationId fullName nationalId status submittedAt')
+      .sort({ submittedAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await Application.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: applications.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
+      data: applications,
+    });
+  } catch (error) {
+    console.error('Get All Applications Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch applications',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Update application status (Admin)
+// @route   PATCH /api/applications/:applicationId/status
+// @access  Admin
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { status, remarks, changedBy = 'Admin' } = req.body;
+
+    const validStatuses = ['Pending', 'Under Review', 'Approved', 'Rejected'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value',
+      });
+    }
+
+    const application = await Application.findOne({ applicationId });
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found',
+      });
+    }
+
+    application.status = status;
+    application.statusHistory.push({
+      status,
+      remarks,
+      changedBy,
+    });
+
+    await application.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Application status updated',
+      data: {
+        applicationId: application.applicationId,
+        status: application.status,
+        lastUpdatedAt: application.lastUpdatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Update Status Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update status',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  submitApplication,
+  getApplicationById,
+  getApplicationsByNationalId,
+  getAllApplications,
+  updateApplicationStatus,
+};

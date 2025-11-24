@@ -1,0 +1,31 @@
+{
+  "name": "mosip-relying-party-backend",
+  "version": "1.0.0",
+  "description": "Mock Relying Party Backend for MOSIP eSignet OAuth Integration",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "set PORT=8888 && set ESIGNET_SERVICE_URL=https://mosip-dev.klefki.io/v1/esignet && nodemon app.js",
+    "devstart": "npm run dev"
+  },
+  "keywords": [
+    "mosip",
+    "oauth",
+    "esignet",
+    "relying-party"
+  ],
+  "author": "",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "jose": "^5.10.0",
+    "mongoose": "^8.20.1",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
