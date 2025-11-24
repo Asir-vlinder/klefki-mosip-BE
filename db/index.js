@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/social_grant_db', {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mmongodb+srv://asir:asir@cluster0.z0qmu.mongodb.net/social-grant-app?retryWrites=true&w=majority&appName=Cluster0', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

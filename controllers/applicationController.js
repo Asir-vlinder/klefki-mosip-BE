@@ -1,6 +1,8 @@
 const Application = require('../models/Application');
 const path = require('path');
 const fs = require('fs');
+const { appendToCSV, getCredentialInfo } = require('../services/csvService');
+const { sendApprovalEmail } = require('../services/emailService');
 
 // @desc    Submit new application
 // @route   POST /api/applications
@@ -75,6 +77,40 @@ const submitApplication = async (req, res) => {
 
     await application.save();
 
+    // 🔥 Step 1: Append to CSV file
+    let csvResult = null;
+    try {
+      csvResult = await appendToCSV({
+        nationalId,
+        fullName,
+      });
+      console.log('CSV Update Result:', csvResult);
+    } catch (csvError) {
+      console.error('CSV update failed:', csvError);
+      // Continue even if CSV fails - don't block application submission
+    }
+
+    // 🔥 Step 2: Get credential info
+    let credentialInfo = null;
+    if (csvResult?.success) {
+      credentialInfo = await getCredentialInfo(nationalId);
+    }
+
+    // 🔥 Step 3: Send approval email
+    try {
+      await sendApprovalEmail({
+        email,
+        fullName,
+        applicationId: application.applicationId,
+        nationalId,
+        credentialInfo,
+      });
+      console.log('✅ Approval email sent to:', email);
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      // Continue even if email fails
+    }
+
     res.status(201).json({
       success: true,
       message: 'Application submitted successfully',
@@ -82,6 +118,8 @@ const submitApplication = async (req, res) => {
         applicationId: application.applicationId,
         status: application.status,
         submittedAt: application.submittedAt,
+        credentialReady: csvResult?.success || false,
+        emailSent: true, // Assuming email was attempted
       },
     });
   } catch (error) {

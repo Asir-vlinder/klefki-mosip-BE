@@ -42,6 +42,23 @@ app.post('/fetchUserInfo', async (req, res) => {
 // Application Routes
 app.use('/api/applications', applicationRoutes);
 
+// Test email endpoint (remove in production)
+app.post('/api/test-email', async (req, res) => {
+  try {
+    const { sendTestEmail } = require('./services/emailService');
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    const result = await sendTestEmail(email);
+    res.json({ success: true, message: 'Test email sent', data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);

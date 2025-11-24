@@ -1,5 +1,5 @@
 {
-  "name": "mosip-relying-party-backend",
+  "name": "social-grant-backend",
   "version": "1.0.0",
   "description": "Mock Relying Party Backend for MOSIP eSignet OAuth Integration",
   "main": "app.js",
@@ -23,7 +23,8 @@
     "express": "^4.21.2",
     "jose": "^5.10.0",
     "mongoose": "^8.20.1",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
