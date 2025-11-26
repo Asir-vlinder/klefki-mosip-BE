@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { appendToCSV, getCredentialInfo } = require('../services/csvService');
 const { sendApprovalEmail } = require('../services/emailService');
+const { sendPurchaseConfirmationEmail } = require('../services/emailService');
 
 // @desc    Submit new application
 // @route   POST /api/applications
@@ -73,6 +74,7 @@ const submitApplication = async (req, res) => {
         size: req.file.size,
         path: req.file.path,
       },
+      grantAmount: 'INV 50000',
     });
 
     await application.save();
@@ -294,10 +296,97 @@ const updateApplicationStatus = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Confirm purchase and send confirmation email
+ * @route   POST /api/applications/purchase/confirm
+ * @access  Public
+ */
+const confirmPurchase = async (req, res) => {
+  try {
+    const { grantId, transactionId, productName, amountDeducted, remainingBalance, currency } = req.body;
+
+    // Validate required fields
+    if (!grantId || !transactionId || !productName || !amountDeducted || remainingBalance === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields',
+      });
+    }
+
+    console.log(`🔍 Looking up application with grant ID: ${grantId}`);
+
+    // Find application by grantId (which is applicationId)
+    const application = await Application.findOne({ nationalId: grantId });
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found',
+      });
+    }
+
+    console.log(`✅ Application found: ${application.email}`);
+
+    // Update application status history
+    application.statusHistory.push({
+      status: 'Purchase Completed',
+      remarks: `Purchase confirmed - Product: ${productName}, Amount: ${currency}${amountDeducted}, Transaction: ${transactionId}`,
+      changedBy: 'System',
+    });
+
+    // Update grant amount (deduct purchase amount)
+    const currentBalance = parseFloat(application.grantAmount.replace(/[^\d.]/g, '')) || 0;
+    const newBalance = currentBalance - amountDeducted;
+    application.grantAmount = `${currency}${newBalance}`;
+
+    // Save updated application
+    await application.save();
+    console.log(`✅ Application updated with new balance: ${application.grantAmount}`);
+
+    // Send purchase confirmation email
+    try {
+      await sendPurchaseConfirmationEmail({
+        email: application.email,
+        fullName: application.fullName,
+        transactionId,
+        productName,
+        amountDeducted,
+        remainingBalance,
+        currency: currency || 'INV ',
+        purchaseDate: new Date(),
+      });
+      console.log('✅ Purchase confirmation email sent');
+    } catch (emailError) {
+      console.error('⚠️  Email sending failed (non-blocking):', emailError);
+      // Don't fail the purchase if email fails
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Purchase confirmed and confirmation email sent',
+      data: {
+        applicationId: application.applicationId,
+        transactionId,
+        email: application.email,
+        newBalance: application.grantAmount,
+        confirmationEmailSent: true,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Confirm Purchase Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to confirm purchase',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   submitApplication,
   getApplicationById,
   getApplicationsByNationalId,
   getAllApplications,
   updateApplicationStatus,
+  confirmPurchase,
 };

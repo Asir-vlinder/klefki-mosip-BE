@@ -422,6 +422,200 @@ const generateEmailTemplate = (data) => {
 };
 
 /**
+ * Generate purchase confirmation email template
+ */
+const generatePurchaseConfirmationTemplate = (data) => {
+  const { fullName, transactionId, productName, amountDeducted, remainingBalance, currency, purchaseDate } = data;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f7fa;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      border-bottom: 2px solid #16A34A;
+      padding-bottom: 15px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      margin: 0 0 5px 0;
+      font-size: 20px;
+      color: #16A34A;
+      font-weight: 600;
+    }
+    .success-badge {
+      display: inline-block;
+      background-color: #DCFCE7;
+      color: #16A34A;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+    .content {
+      padding: 10px 0;
+    }
+    .content p {
+      margin: 15px 0;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1E3A8A;
+      margin: 25px 0 15px 0;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 8px;
+    }
+    .info-table {
+      width: 100%;
+      margin: 15px 0;
+      border-collapse: collapse;
+    }
+    .info-table td {
+      padding: 10px 15px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .info-table td:first-child {
+      font-weight: 600;
+      color: #666;
+      width: 40%;
+    }
+    .info-table td:last-child {
+      color: #1E3A8A;
+      font-weight: 600;
+    }
+    .info-table tr:last-child td {
+      border-bottom: none;
+    }
+    .balance-section {
+      background-color: #F0FDF4;
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #16A34A;
+    }
+    .balance-label {
+      font-size: 13px;
+      color: #666;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .balance-amount {
+      font-size: 24px;
+      color: #16A34A;
+      font-weight: 700;
+    }
+    .transaction-box {
+      background-color: #F9FAFB;
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border: 1px solid #e5e7eb;
+    }
+    .transaction-id {
+      font-family: 'Courier New', monospace;
+      background-color: #F3F4F6;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #1F2937;
+      word-break: break-all;
+    }
+    .footer {
+      text-align: center;
+      padding: 25px 0 0;
+      color: #666;
+      font-size: 13px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 30px;
+    }
+    .footer p {
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Purchase Confirmed</h1>
+      <span class="success-badge">TRANSACTION SUCCESSFUL</span>
+    </div>
+
+    <div class="content">
+      <p>Dear <strong>${fullName}</strong>,</p>
+      
+      <p>Your purchase has been successfully completed using your Social Grant. Your order confirmation details are provided below.</p>
+
+      <div class="section-title">Transaction Details</div>
+      
+      <table class="info-table">
+        <tr>
+          <td>Transaction ID:</td>
+          <td><span class="transaction-id">${transactionId}</span></td>
+        </tr>
+        <tr>
+          <td>Product:</td>
+          <td>${productName}</td>
+        </tr>
+        <tr>
+          <td>Amount Deducted:</td>
+          <td>${currency}${amountDeducted?.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td>Date & Time:</td>
+          <td>${new Date(purchaseDate).toLocaleString('en-GB')}</td>
+        </tr>
+      </table>
+
+      <div class="balance-section">
+        <div class="balance-label">Remaining Grant Balance</div>
+        <div class="balance-amount">${currency}${remainingBalance?.toLocaleString()}</div>
+      </div>
+
+      <p style="margin-top: 25px;">
+        You can continue shopping or check your account for more details. If you have any questions about this transaction, please contact our support team.
+      </p>
+
+      <p style="margin-top: 25px;">
+        Best regards,<br>
+        <strong>Government of Invia</strong><br>
+        Social Welfare Department
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>Automated Notice</strong></p>
+      <p>This is an automated confirmation. Please do not reply to this email.</p>
+      <p>&copy; 2025 Government of Invia. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};
+
+
+
+/**
  * Send email via Nexus
  */
 const sendViaNexttus = async (mailParams) => {
@@ -542,6 +736,63 @@ const sendApprovalEmail = async (emailData) => {
 };
 
 /**
+ * Send purchase confirmation email
+ */
+const sendPurchaseConfirmationEmail = async (emailData) => {
+  try {
+    const { email, fullName, transactionId, productName, amountDeducted, remainingBalance, currency, purchaseDate } = emailData;
+
+    console.log(`📧 Preparing to send purchase confirmation email to: ${email}`);
+
+    const mailParams = {
+      from: `${SENDER_NAME} <${SENDER_EMAIL}>`,
+      to: [email],
+      subject: '✅ Purchase Confirmation - Your Transaction is Complete',
+      html: generatePurchaseConfirmationTemplate({
+        fullName,
+        transactionId,
+        productName,
+        amountDeducted,
+        remainingBalance,
+        currency,
+        purchaseDate: purchaseDate || new Date(),
+      }),
+      text: `Dear ${fullName},
+
+Your purchase has been successfully completed using your Social Grant.
+
+Transaction Details:
+Transaction ID: ${transactionId}
+Product: ${productName}
+Amount Deducted: ${currency}${amountDeducted?.toLocaleString()}
+Date & Time: ${new Date(purchaseDate || new Date()).toLocaleString('en-GB')}
+
+Remaining Grant Balance: ${currency}${remainingBalance?.toLocaleString()}
+
+If you have any questions about this transaction, please contact our support team.
+
+Best regards,
+Government of Invia
+Social Welfare Department
+
+This is an automated notification. Please do not reply to this email.
+© 2025 Government of Invia. All rights reserved.`,
+    };
+
+    if (NEXUS_CONFIG.enabled && NEXUS_CONFIG.token) {
+      const result = await sendViaNextus(mailParams);
+      console.log('✅ Purchase confirmation email sent successfully:', result.messageId);
+      return result;
+    } else {
+      throw new Error('Nexus email service is not configured. Please set NEXUS_ENABLED=true and provide NEXUS_TOKEN in .env');
+    }
+  } catch (error) {
+    console.error('❌ Error sending purchase confirmation email:', error);
+    throw error;
+  }
+};
+
+/**
  * Send test email
  */
 const sendTestEmail = async (toEmail) => {
@@ -605,6 +856,7 @@ verifyEmailConfig();
 
 module.exports = {
   sendApprovalEmail,
+  sendPurchaseConfirmationEmail,
   sendTestEmail,
   verifyEmailConfig,
 };

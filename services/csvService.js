@@ -5,13 +5,13 @@ const appendFile = promisify(fs.appendFile);
 const readFile = promisify(fs.readFile);
 
 // CSV file path on remote server
-// const CSV_FILE_PATH = '/home/developer/workspace/inji-certify/docker-compose/docker-compose-injistack/config/driving_license_data.csv';
-const CSV_FILE_PATH = 'D:/vlinder/COJ/Inji/driving_license_data.csv';
+const CSV_FILE_PATH = '/home/developer/workspace/inji-certify/docker-compose/docker-compose-injistack/config/driving_license_data.csv';
+// const CSV_FILE_PATH = 'D:/vlinder/COJ/Inji/driving_license_data.csv';
 
 // Static grant information
 const GRANT_INFO = {
   grantName: 'Invia Social Grant',
-  grantAmount: 'INV 80000',
+  grantAmount: 'INV 50000',
   grantType: 'Social Welfare',
   grantDescription: 'Invia Social Grant Credential provides a secure verifiable digital proof of an individual\'s eligibility for government social-benefit programs',
   issuerName: 'Government of Invia',

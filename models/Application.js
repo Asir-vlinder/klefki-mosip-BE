@@ -120,6 +120,11 @@ const applicationSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Grant Amount
+    grantAmount: {
+      type: String,
+      default: 'INV 50000',
+    },
     // Application Status
     status: {
       type: String,

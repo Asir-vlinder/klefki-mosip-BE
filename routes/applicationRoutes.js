@@ -6,6 +6,7 @@ const {
   getApplicationsByNationalId,
   getAllApplications,
   updateApplicationStatus,
+  confirmPurchase,
 } = require('../controllers/applicationController');
 const { upload, handleUploadError } = require('../middleware/upload');
 
@@ -28,5 +29,7 @@ router.get('/user/:nationalId', getApplicationsByNationalId);
 
 // Update application status (Admin)
 router.patch('/:applicationId/status', updateApplicationStatus);
+
+router.post('/purchase/confirm', confirmPurchase);
 
 module.exports = router;
