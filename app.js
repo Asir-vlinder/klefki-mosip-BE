@@ -14,9 +14,25 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3005',
+    'http://localhost:5173',
+    'https://mosip-dev.klefki.io',
+    'http://13.203.236.51',
+    'http://13.203.236.51:8888',
+    'http://13.203.236.51:3000',
+    'http://13.203.236.51:3005',
+    'https://e-governance.klefki.io'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
+
+// Allow preflight
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

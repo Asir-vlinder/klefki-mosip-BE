@@ -780,7 +780,7 @@ This is an automated notification. Please do not reply to this email.
     };
 
     if (NEXUS_CONFIG.enabled && NEXUS_CONFIG.token) {
-      const result = await sendViaNextus(mailParams);
+      const result = await sendViaNexttus(mailParams);
       console.log('✅ Purchase confirmation email sent successfully:', result.messageId);
       return result;
     } else {

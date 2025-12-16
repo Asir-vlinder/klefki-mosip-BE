@@ -111,11 +111,11 @@ const maxAge = process.env.MAX_AGE;
 const claimsLocales = checkEmptyNullValue(process.env.CLAIMS_LOCALES, "en");
 const redirectUriUserprofile = checkEmptyNullValue(
     process.env.REDIRECT_URI_USER_PROFILE,
-    "http://localhost:3000/apply-for-social-grant",  // ← Make sure this matches
+    "https://e-governance.klefki.io/apply-for-social-grant",  // ← Make sure this matches
 );
 const redirectUriRegistration = checkEmptyNullValue(
     process.env.REDIRECT_URI_REGISTRATION,
-    "http://localhost:3000/apply-for-social-grant",  // ← Make sure this matches
+    "https://e-governance.klefki.io/apply-for-social-grant",  // ← Make sure this matches
 );
 const acrValues = process.env.ACRS;
 
